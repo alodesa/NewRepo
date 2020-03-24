@@ -1,0 +1,117 @@
+﻿@page "/cases"
+@using Blazor.Models
+@inject HttpClient  http
+
+
+
+
+<div class="container">
+    <div class="text-right">
+        <button type="submit" class="btn btn-danger" @onclick="DeleteAllCases"> Ta bort alla ärenden!</button>
+    </div>
+
+    <EditForm class="my-5" Model="@Case" OnSubmit="@CreateCase">
+        <h5 class="mb-3">Skapa ett ärende</h5>
+        <div class="form-group">
+            <div class="row">
+                <div class="col">
+                    <input type="number" class="form-control" placeholder="HandlägareId.." @bind="Case.CaseWorkerId" />
+                </div>
+                <div class="col">
+                    <input type="number" class="form-control" placeholder="KundId.." @bind="Case.CustomerId" />
+                </div>
+                <div class="col">
+                    <input type="number" class="form-control" placeholder="StatusId.." @bind="Case.CaseStatusId" />
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" placeholder="Titel.." @bind="Case.Title" />
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <input type="text" class="form-control" placeholder="Beskrivning.." @bind="Case.Description" />
+        </div>
+        <div class="col">
+            <input type="text" class="form-control" placeholder="Datum.." @bind="Case.Created" />
+        </div>
+
+        <button type="submit" class="btn btn.success">Skapa ärende</button>
+    </EditForm>
+
+    <table class="table">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Handlägare</th>
+                <th scope="col">Kund</th>
+                <th scope="col">Status</th>
+                <th scope="col">Titel</th>
+                <th scope="col" colspan="2">Beskrivning</th>
+                <th scope="col">Datum</th>
+            </tr>
+
+        </thead>
+        @if (cases != null)
+        {
+            <tbody>
+                @foreach (var Case in cases)
+                {
+                <tr>
+                    <th scope="row">@Case.Id</th>
+                    <th>@Case.CustomerId</th>
+                    <th>@Case.CaseWorkerId</th>
+                    <th>@Case.CaseStatusId</th>
+                    <th>@Case.Title</th>
+                    <th>@Case.Description</th>
+                    <th>@Case.Created</th>
+                    <td class="text-center">
+                        <span style="cursor:pointer" class="oi oi-trash" @onclick="() => DeleteCase(Case.Id)"></span>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        }
+    </table>
+</div>
+
+
+@code {
+    private List<CaseModel> cases;
+    private CaseCreateModel Case;
+
+    private async Task GetCases()
+    {
+        cases = await http.GetJsonAsync<List<CaseModel>>("http://localhost:63077/api/cases");
+        StateHasChanged();
+    }
+
+
+    private async Task CreateCase()
+    {
+        await http.PostJsonAsync<CaseCreateModel>("http://localhost:63077/api/cases", Case);
+
+        Case = new CaseCreateModel();
+        await GetCases();
+    }
+
+
+    private async Task DeleteAllCases()
+    {
+        await http.DeleteAsync("http://localhost:63077/api/cases/all");
+        await GetCases();
+    }
+
+    private async Task DeleteCase(int id)
+    {
+        await http.DeleteAsync($"http://localhost:63077/api/cases/Id");
+        await GetCases();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Case = new CaseCreateModel();
+        await GetCases();
+    }
+
+
+}
